@@ -12,6 +12,7 @@
         'Get-NSPGraphTransport'
         'Invoke-NSPGraphCollection'
         'Invoke-NSPGraphRequest'
+        'Register-NSPGraphAppRegistration'
         'Set-NSPGraphTransport'
     )
     CmdletsToExport = @()
