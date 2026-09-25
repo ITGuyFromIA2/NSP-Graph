@@ -4,7 +4,7 @@
 
 `NSP.M365.Graph`: shared Graph connection, paging, and request transport for the NSP M365 tools.
 Toolkit B4 in `C:\GitRepo\PoSHRepo\ClaudeStuff\04_Toolkit_Candidates.md`. The first consumer is
-`NSP-PoSHToolkits\NSP-ConditionalAccessWizard` (see its PLAN.md, "Graph layer").
+`NSP-PoSHToolkits\NSP-ConditionalAccess` (see its PLAN.md, "Graph layer").
 
 ## Hard rules
 
