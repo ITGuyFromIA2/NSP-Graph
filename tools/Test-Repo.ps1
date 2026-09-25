@@ -32,7 +32,7 @@ function Get-ModuleSourceFile {
 
 Write-Host "`n=== Client-data gate ===" -ForegroundColor Cyan
 # Report locations only, never the matched value.
-$privateMarker = '(?i)\\\\[a-z0-9._-]+\\[a-z0-9$._-]+|[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}'
+$privateMarker = '(?i)\\\\[a-z0-9._-]+\\[a-z0-9$._-]+|[a-z0-9._%+-]+@(?!odata\.)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}'
 $hits = foreach ($file in Get-ModuleSourceFile) {
     Select-String -LiteralPath $file.FullName -Pattern $privateMarker |
         ForEach-Object { "$($file.FullName.Substring($repoRoot.Length + 1)):$($_.LineNumber)" }
