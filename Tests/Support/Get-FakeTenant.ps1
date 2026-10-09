@@ -1,16 +1,21 @@
 # In-memory tenant for the Fake transport: just enough of applications, servicePrincipals, and
 # oauth2PermissionGrants for app-registration tests. Returns @{ State; Responder }.
 function Get-FakeTenant {
-    param([string[]]$GraphScopes = @('Policy.Read.All', 'Policy.ReadWrite.ConditionalAccess', 'Group.Read.All'))
+    param(
+        [string[]]$GraphScopes = @('Policy.Read.All', 'Policy.ReadWrite.ConditionalAccess', 'Group.Read.All'),
+        [string[]]$GraphAppRoles = @('User.Read.All', 'GroupMember.ReadWrite.All')
+    )
 
     $state = @{
         Counter = 0
         Applications = [System.Collections.Generic.List[hashtable]]::new()
         ServicePrincipals = [System.Collections.Generic.List[hashtable]]::new()
         Grants = [System.Collections.Generic.List[hashtable]]::new()
+        RoleAssignments = [System.Collections.Generic.List[hashtable]]::new()
     }
     $scopeObjects = @($GraphScopes | ForEach-Object { @{ value = $_; id = "scope-id-$_" } })
-    $state.ServicePrincipals.Add(@{ id = 'graph-sp'; appId = '00000003-0000-0000-c000-000000000000'; oauth2PermissionScopes = $scopeObjects })
+    $roleObjects = @($GraphAppRoles | ForEach-Object { @{ value = $_; id = "role-id-$_" } })
+    $state.ServicePrincipals.Add(@{ id = 'graph-sp'; appId = '00000003-0000-0000-c000-000000000000'; oauth2PermissionScopes = $scopeObjects; appRoles = $roleObjects })
 
     $responder = {
         param($Method, $Uri, $Body)
@@ -31,6 +36,13 @@ function Get-FakeTenant {
         }
 
         $collections = @{ applications = $state.Applications; servicePrincipals = $state.ServicePrincipals; oauth2PermissionGrants = $state.Grants }
+        if ($path -match '^servicePrincipals/(?<sp>[^/]+)/appRoleAssignments$') {
+            $sp = $Matches.sp
+            if ($Method -eq 'GET') { return @{ value = @($state.RoleAssignments | Where-Object { $_.principalId -eq $sp }) } }
+            $assignment = @{ id = "assignment-$n" } + $Body
+            $state.RoleAssignments.Add($assignment)
+            return $assignment
+        }
         switch ($Method) {
             'GET' {
                 if ($path -eq 'organization') { return @{ value = @(@{ verifiedDomains = @(@{ name = 'fixture.onmicrosoft.com'; isDefault = $true }) }) } }

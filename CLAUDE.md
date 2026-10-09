@@ -11,6 +11,10 @@ Toolkit B4 in `C:\GitRepo\PoSHRepo\ClaudeStuff\04_Toolkit_Candidates.md`. The fi
 - Windows PowerShell 5.1 is the floor. The module must import on a bare host; Graph SDK modules are not
   `RequiredModules`.
 - Nothing domain-specific lives here. No Conditional Access, Intune, or group logic, and no scope lists.
+- Registration is plan-only without `-Execute`. App-only registrations keep private keys on the host:
+  certificates are non-exportable, and records hold thumbprints, never keys or secrets.
+- Tests never touch a real certificate store or tenant: certificate helpers are private wrappers
+  that tests mock, and Graph goes through the `Fake` transport.
 - The canonical data shape is Graph REST JSON as hashtables (camelCase).
 - Never abbreviate Conditional Access as "CA" (NSP-CAManager owns that noun space).
 - One function per file. `FunctionsToExport` matches `Public\`. Exported functions need `.SYNOPSIS` and `.EXAMPLE`.

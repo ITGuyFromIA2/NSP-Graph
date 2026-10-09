@@ -3,7 +3,8 @@
     Pre-push check for NSP.M365.Graph. Exits non-zero on any failure.
 
 .DESCRIPTION
-    1. Client-data gate over module source: no e-mail addresses or UNC paths.
+    1. Client-data gate: NSP.RepoTools' client-reference sweep when available, otherwise no
+       e-mail addresses or UNC paths in module source.
     2. Parser check over every script.
     3. Module import under Windows PowerShell 5.1 (the floor).
     4. PSScriptAnalyzer over module source.
@@ -31,11 +32,21 @@ function Get-ModuleSourceFile {
 }
 
 Write-Host "`n=== Client-data gate ===" -ForegroundColor Cyan
-# Report locations only, never the matched value.
-$privateMarker = '(?i)\\\\[a-z0-9._-]+\\[a-z0-9$._-]+|[a-z0-9._%+-]+@(?!odata\.)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}'
-$hits = foreach ($file in Get-ModuleSourceFile) {
-    Select-String -LiteralPath $file.FullName -Pattern $privateMarker |
-        ForEach-Object { "$($file.FullName.Substring($repoRoot.Length + 1)):$($_.LineNumber)" }
+# Report locations only, never the matched value. With NSP.RepoTools (installed, or beside this
+# repository), the sweep also checks your client token list, untracked files, and file paths;
+# settings in .nsp-repotools.psd1. Without it, a pattern check: addresses in the reserved
+# (RFC 2606) domains .example, .test, and .invalid are synthetic by definition and allowed in tests.
+$repoTools = Join-Path (Split-Path -Parent $repoRoot) 'NSP-RepoTools\NSP.RepoTools.psd1'
+if (-not (Get-Module -ListAvailable -Name NSP.RepoTools) -and (Test-Path -LiteralPath $repoTools)) { Import-Module $repoTools -Force }
+if (Get-Command Find-NSPClientReference -ErrorAction SilentlyContinue) {
+    $hits = @(Find-NSPClientReference -Path $repoRoot -IncludeUntracked -WarningAction SilentlyContinue |
+            ForEach-Object { "$($_.File):$($_.Line) [$($_.Rule)]" })
+} else {
+    $privateMarker = '(?i)\\\\[a-z0-9._-]+\\[a-z0-9$._-]+|[a-z0-9._%+-]+@(?!odata\.)(?![a-z0-9.-]*\.(example|test|invalid)\b)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}'
+    $hits = foreach ($file in Get-ModuleSourceFile) {
+        Select-String -LiteralPath $file.FullName -Pattern $privateMarker |
+            ForEach-Object { "$($file.FullName.Substring($repoRoot.Length + 1)):$($_.LineNumber)" }
+    }
 }
 if (@($hits).Count) {
     Write-Host "Review possible client or private reference at: $(@($hits) -join ', ')" -ForegroundColor Red

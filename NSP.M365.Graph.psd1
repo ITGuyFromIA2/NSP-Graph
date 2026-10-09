@@ -9,9 +9,11 @@
     PowerShellVersion = '5.1'
     FunctionsToExport = @(
         'Connect-NSPGraph'
+        'Connect-NSPGraphAppOnly'
         'Get-NSPGraphTransport'
         'Invoke-NSPGraphCollection'
         'Invoke-NSPGraphRequest'
+        'Register-NSPGraphAppOnlyRegistration'
         'Register-NSPGraphAppRegistration'
         'Set-NSPGraphTransport'
     )
@@ -21,7 +23,9 @@
     PrivateData = @{
         PSData = @{
             Tags = @('MicrosoftGraph', 'M365', 'Entra', 'NSP')
-            ReleaseNotes = 'Initial module: Connect-NSPGraph extracted from NSP-IntuneApps, request/paging transport layer with a fake transport for tests.'
+            ProjectUri = 'https://github.com/ITGuyFromIA2/NSP-Graph'
+            LicenseUri = 'https://github.com/ITGuyFromIA2/NSP-Graph/blob/main/LICENSE'
+            ReleaseNotes = '0.1.0: first release. Delegated (Connect-NSPGraph) and certificate app-only (Connect-NSPGraphAppOnly) sign-in; Invoke-NSPGraphRequest / Invoke-NSPGraphCollection over a swappable transport (MgGraphRequest, Fake); plan-only tenant bootstrap for delegated and app-only app registrations.'
         }
     }
 }
